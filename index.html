@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jerk Hut Ball Knowledge — Daily MLB Quiz</title>
+
+<!-- Vercel Web Analytics Script -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+
 <style>
   :root{
     --navy:#0b2545;
@@ -202,7 +209,7 @@ const state = {
   pool: [],
   today: null,
   guesses: 0,
-  hintsRevealed: 1, // first hint free
+  hintsRevealed: 1, 
   solved: false,
   gaveUp: false,
 };
@@ -233,9 +240,6 @@ function normalize(s) {
     .replace(/\s+/g, ' ');
 }
 
-// Data now comes from static JSON generated ahead of time by generate_daily_data.R
-// (players.json + today.json), NOT from a live browser call to statsapi.mlb.com.
-// This sidesteps any CORS/network issue entirely since the files are same-origin.
 async function init() {
   els.dateLine.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   try {

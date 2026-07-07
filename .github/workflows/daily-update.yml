@@ -1,0 +1,36 @@
+name: Daily MLB Player Update
+
+on:
+  schedule:
+    - cron: '0 5 * * *' # Runs every day at midnight EST (5:00 AM UTC)
+  workflow_dispatch: # Allows you to manually trigger it from the website anytime
+
+permissions:
+  contents: write
+
+jobs:
+  update-player:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+
+      - name: Install R packages
+        run: |
+          Rscript -e 'install.packages(c("httr", "jsonlite"))'
+
+      - name: Run daily data generation
+        run: Rscript generate_daily_data.R
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "actions@github.com"
+          git add today.json players.json
+          git diff-index --quiet HEAD || git commit -m "Automated daily player update"
+          git push

@@ -86,19 +86,55 @@
   .hint-label{color:#777;}
   .hint-value{font-weight:600;color:var(--navy);}
   .hint-value.locked{color:#bbb;font-weight:400;}
+  
+  /* Search Container & Custom Mobile Dropdown Styling */
+  .search-container {
+    position: relative;
+    flex: 1;
+  }
   form#guess-form{
     display:flex;
     gap:8px;
     margin-top:18px;
   }
   #guess-input{
-    flex:1;
+    width: 100%;
     padding:10px 12px;
     border:1px solid var(--navy);
     border-radius:6px;
     font-size:1rem;
     font-family:system-ui,-apple-system,sans-serif;
   }
+  #custom-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--navy);
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  .dropdown-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+  }
+  .dropdown-item:last-child {
+    border-bottom: none;
+  }
+  .dropdown-item:hover, .dropdown-item.active {
+    background: #efe9d8;
+    color: var(--navy);
+    font-weight: 500;
+  }
+
   button{
     padding:10px 16px;
     background:var(--navy);
@@ -108,12 +144,14 @@
     font-size:1rem;
     cursor:pointer;
     font-family:system-ui,-apple-system,sans-serif;
+    height: 42px;
   }
   button:hover{background:#132f5c;}
   button.secondary{
     background:transparent;
     color:var(--navy);
     border:1px solid var(--navy);
+    height: auto;
   }
   #guess-history{
     margin-top:14px;
@@ -177,8 +215,10 @@
     <div id="hints"></div>
 
     <form id="guess-form" autocomplete="off">
-      <input id="guess-input" list="players-list" placeholder="Type a player's name…" required>
-      <datalist id="players-list"></datalist>
+      <div class="search-container">
+        <input id="guess-input" placeholder="Type a player's name…" required>
+        <div id="custom-dropdown" style="display: none;"></div>
+      </div>
       <button type="submit">Guess</button>
     </form>
 
@@ -193,7 +233,7 @@
 </div>
 
 <script>
-const MAX_GUESSES = 7;
+const MAX_GUESSES = 7; // Updated to 7 guesses
 const SEASON = new Date().getFullYear();
 
 const HINT_DEFS = [
@@ -207,9 +247,10 @@ const HINT_DEFS = [
 
 const state = {
   pool: [],
+  uniqueNames: [], // Sorted plain text names for filter logic
   today: null,
   guesses: 0,
-  hintsRevealed: 0, 
+  hintsRevealed: 0, // Changed to 0 so position remains locked until guess 1
   solved: false,
   gaveUp: false,
 };
@@ -222,7 +263,7 @@ const els = {
   hints: document.getElementById('hints'),
   form: document.getElementById('guess-form'),
   input: document.getElementById('guess-input'),
-  datalist: document.getElementById('players-list'),
+  dropdown: document.getElementById('custom-dropdown'),
   history: document.getElementById('guess-history'),
   result: document.getElementById('result'),
   guessCount: document.getElementById('guess-count'),
@@ -255,7 +296,10 @@ async function init() {
 
     if (!Array.isArray(players) || players.length === 0) throw new Error('players.json is empty.');
     state.pool = players;
-    populateDatalist(players);
+    state.uniqueNames = [...new Set(players.map(p => p.fullName))].sort();
+    
+    setupDropdownSearch();
+
     state.today = today;
 
     els.loading.hidden = true;
@@ -265,18 +309,50 @@ async function init() {
     console.error(err);
     els.loading.hidden = true;
     els.error.hidden = false;
-    els.error.textContent = 'Could not load today\'s player data. (' + err.message + ') Make sure players.json and today.json (from generate_daily_data.R) are sitting next to index.html.';
+    els.error.textContent = 'Could not load today\'s player data. (' + err.message + ')';
   }
 }
 
-function populateDatalist(people) {
-  els.datalist.innerHTML = '';
-  const names = [...new Set(people.map(p => p.fullName))].sort();
-  for (const name of names) {
-    const opt = document.createElement('option');
-    opt.value = name;
-    els.datalist.appendChild(opt);
-  }
+// Mobile-friendly custom search input handling
+function setupDropdownSearch() {
+  els.input.addEventListener('input', () => {
+    const value = els.input.value.trim();
+    if (!value) {
+      els.dropdown.style.display = 'none';
+      return;
+    }
+
+    const searchStr = normalize(value);
+    const matches = state.uniqueNames.filter(name => normalize(name).includes(searchStr)).slice(0, 10);
+
+    if (matches.length === 0) {
+      els.dropdown.style.display = 'none';
+      return;
+    }
+
+    els.dropdown.innerHTML = '';
+    matches.forEach(match => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.textContent = match;
+      
+      item.addEventListener('click', () => {
+        els.input.value = match;
+        els.dropdown.style.display = 'none';
+        els.input.focus();
+      });
+      els.dropdown.appendChild(item);
+    });
+
+    els.dropdown.style.display = 'block';
+  });
+
+  // Close dropdown menu if user clicks anywhere else outside the search container
+  document.addEventListener('click', (e) => {
+    if (!els.input.contains(e.target) && !els.dropdown.contains(e.target)) {
+      els.dropdown.style.display = 'none';
+    }
+  });
 }
 
 function blurForGuesses(n) {
@@ -341,6 +417,7 @@ els.form.addEventListener('submit', (e) => {
   const guess = normalize(raw);
   const correct = guess === normalize(state.today.fullName) || guess === normalize(state.today.lastName);
 
+  els.dropdown.style.display = 'none';
   addHistoryItem(raw, correct);
   els.input.value = '';
 
@@ -351,7 +428,7 @@ els.form.addEventListener('submit', (e) => {
   }
 
   state.guesses += 1;
-  state.hintsRevealed = Math.min(state.hintsRevealed + 1, HINT_DEFS.length);
+  state.hintsRevealed = Math.min(state.guesses, HINT_DEFS.length);
 
   if (state.guesses >= MAX_GUESSES) {
     endGame(false);

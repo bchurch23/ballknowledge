@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jerk Hut Ball Knowledge — Daily MLB Quiz</title>
+<style>
+  :root{
+    --navy:#0b2545;
+    --cream:#f7f3e8;
+    --red:#c8102e;
+    --line:#d8cfb8;
+    --ink:#1a1a1a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Georgia','Times New Roman',serif;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px;
+  }
+  #app{
+    width:100%;
+    max-width:420px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:20px;
+  }
+  header h1{
+    margin:0;
+    font-size:1.6rem;
+    letter-spacing:0.5px;
+    color:var(--navy);
+  }
+  header p{
+    margin:4px 0 0;
+    font-size:0.85rem;
+    color:#666;
+    font-family:system-ui,-apple-system,sans-serif;
+  }
+  #photo-wrap{
+    background:var(--navy);
+    border-radius:10px;
+    padding:14px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:220px;
+  }
+  #headshot{
+    max-width:200px;
+    max-height:220px;
+    border-radius:6px;
+    background:#dcdcdc;
+    transition:filter 0.4s ease;
+  }
+  #loading, #error{
+    text-align:center;
+    font-family:system-ui,-apple-system,sans-serif;
+    color:var(--navy);
+    padding:40px 10px;
+  }
+  #error{color:var(--red);}
+  #hints{
+    margin-top:16px;
+    font-family:system-ui,-apple-system,sans-serif;
+    font-size:0.9rem;
+  }
+  .hint-row{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 2px;
+    border-bottom:1px solid var(--line);
+  }
+  .hint-label{color:#777;}
+  .hint-value{font-weight:600;color:var(--navy);}
+  .hint-value.locked{color:#bbb;font-weight:400;}
+  form#guess-form{
+    display:flex;
+    gap:8px;
+    margin-top:18px;
+  }
+  #guess-input{
+    flex:1;
+    padding:10px 12px;
+    border:1px solid var(--navy);
+    border-radius:6px;
+    font-size:1rem;
+    font-family:system-ui,-apple-system,sans-serif;
+  }
+  button{
+    padding:10px 16px;
+    background:var(--navy);
+    color:white;
+    border:none;
+    border-radius:6px;
+    font-size:1rem;
+    cursor:pointer;
+    font-family:system-ui,-apple-system,sans-serif;
+  }
+  button:hover{background:#132f5c;}
+  button.secondary{
+    background:transparent;
+    color:var(--navy);
+    border:1px solid var(--navy);
+  }
+  #guess-history{
+    margin-top:14px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-family:system-ui,-apple-system,sans-serif;
+    font-size:0.9rem;
+  }
+  .guess-item{
+    padding:8px 10px;
+    border-radius:6px;
+    background:#efe9d8;
+    display:flex;
+    justify-content:space-between;
+  }
+  .guess-item.wrong{color:#8a1c1c;}
+  #result{
+    margin-top:18px;
+    text-align:center;
+    font-family:system-ui,-apple-system,sans-serif;
+  }
+  #result h2{
+    color:var(--navy);
+    font-family:'Georgia',serif;
+  }
+  #guess-count{
+    text-align:center;
+    margin-top:10px;
+    font-size:0.8rem;
+    color:#777;
+    font-family:system-ui,-apple-system,sans-serif;
+  }
+  footer{
+    margin-top:16px;
+    text-align:center;
+  }
+  #give-up-wrap{
+    margin-top:10px;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>⚾ Jerk Hut Ball Knowledge</h1>
+    <p id="date-line"></p>
+  </header>
+
+  <div id="loading">Loading today's player…</div>
+  <div id="error" hidden></div>
+
+  <div id="game" hidden>
+    <div id="photo-wrap">
+      <img id="headshot" alt="Mystery MLB player headshot">
+    </div>
+
+    <div id="guess-count"></div>
+
+    <div id="hints"></div>
+
+    <form id="guess-form" autocomplete="off">
+      <input id="guess-input" list="players-list" placeholder="Type a player's name…" required>
+      <datalist id="players-list"></datalist>
+      <button type="submit">Guess</button>
+    </form>
+
+    <div id="give-up-wrap">
+      <button class="secondary" id="give-up-btn" type="button">Give up</button>
+    </div>
+
+    <div id="guess-history"></div>
+
+    <div id="result" hidden></div>
+  </div>
+</div>
+
+<script>
+const MAX_GUESSES = 6;
+const SEASON = new Date().getFullYear();
+
+const HINT_DEFS = [
+  { key: 'position', label: 'Position' },
+  { key: 'teams', label: 'Team(s)' },
+  { key: 'bats', label: 'Bats / Throws' },
+  { key: 'number', label: 'Jersey #' },
+  { key: 'seasonsSpan', label: 'Seasons' },
+  { key: 'birthCountry', label: 'Born in' },
+];
+
+const state = {
+  pool: [],
+  today: null,
+  guesses: 0,
+  hintsRevealed: 1, // first hint free
+  solved: false,
+  gaveUp: false,
+};
+
+const els = {
+  loading: document.getElementById('loading'),
+  error: document.getElementById('error'),
+  game: document.getElementById('game'),
+  headshot: document.getElementById('headshot'),
+  hints: document.getElementById('hints'),
+  form: document.getElementById('guess-form'),
+  input: document.getElementById('guess-input'),
+  datalist: document.getElementById('players-list'),
+  history: document.getElementById('guess-history'),
+  result: document.getElementById('result'),
+  guessCount: document.getElementById('guess-count'),
+  giveUpBtn: document.getElementById('give-up-btn'),
+  dateLine: document.getElementById('date-line'),
+};
+
+function normalize(s) {
+  return s
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\b(jr|sr|ii|iii|iv)\b/g, '')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+// Data now comes from static JSON generated ahead of time by generate_daily_data.R
+// (players.json + today.json), NOT from a live browser call to statsapi.mlb.com.
+// This sidesteps any CORS/network issue entirely since the files are same-origin.
+async function init() {
+  els.dateLine.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  try {
+    const [playersRes, todayRes] = await Promise.all([
+      fetch('./players.json'),
+      fetch('./today.json'),
+    ]);
+    if (!playersRes.ok) throw new Error('players.json missing or unreadable (' + playersRes.status + ')');
+    if (!todayRes.ok) throw new Error('today.json missing or unreadable (' + todayRes.status + ')');
+
+    const players = await playersRes.json();
+    const today = await todayRes.json();
+
+    if (!Array.isArray(players) || players.length === 0) throw new Error('players.json is empty.');
+    state.pool = players;
+    populateDatalist(players);
+    state.today = today;
+
+    els.loading.hidden = true;
+    els.game.hidden = false;
+    renderGame();
+  } catch (err) {
+    console.error(err);
+    els.loading.hidden = true;
+    els.error.hidden = false;
+    els.error.textContent = 'Could not load today\'s player data. (' + err.message + ') Make sure players.json and today.json (from generate_daily_data.R) are sitting next to index.html.';
+  }
+}
+
+function populateDatalist(people) {
+  els.datalist.innerHTML = '';
+  const names = [...new Set(people.map(p => p.fullName))].sort();
+  for (const name of names) {
+    const opt = document.createElement('option');
+    opt.value = name;
+    els.datalist.appendChild(opt);
+  }
+}
+
+function blurForGuesses(n) {
+  return 0;
+}
+
+function renderGame() {
+  els.headshot.src = state.today.headshotUrl || `https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/${state.today.id}/headshot/67/current`;
+  els.headshot.style.filter = `blur(${blurForGuesses(state.guesses)}px)`;
+  els.guessCount.textContent = state.solved || state.gaveUp
+    ? ''
+    : `Guess ${state.guesses + 1} of ${MAX_GUESSES}`;
+  renderHints();
+}
+
+function renderHints() {
+  els.hints.innerHTML = '';
+  HINT_DEFS.forEach((def, i) => {
+    const row = document.createElement('div');
+    row.className = 'hint-row';
+    const label = document.createElement('span');
+    label.className = 'hint-label';
+    label.textContent = def.label;
+    const value = document.createElement('span');
+    if (i < state.hintsRevealed || state.solved || state.gaveUp) {
+      value.className = 'hint-value';
+      value.textContent = state.today[def.key];
+    } else {
+      value.className = 'hint-value locked';
+      value.textContent = '???';
+    }
+    row.appendChild(label);
+    row.appendChild(value);
+    els.hints.appendChild(row);
+  });
+}
+
+function addHistoryItem(text, correct) {
+  const div = document.createElement('div');
+  div.className = 'guess-item' + (correct ? '' : ' wrong');
+  div.innerHTML = `<span>${text}</span><span>${correct ? '✅' : '❌'}</span>`;
+  els.history.prepend(div);
+}
+
+function endGame(won) {
+  els.form.hidden = true;
+  els.giveUpBtn.hidden = true;
+  els.headshot.style.filter = 'blur(0px)';
+  renderHints();
+  els.result.hidden = false;
+  els.result.innerHTML = won
+    ? `<h2>🎉 Nice! It was ${state.today.fullName}.</h2>`
+    : `<h2>The answer was ${state.today.fullName}.</h2>`;
+  els.guessCount.textContent = '';
+}
+
+els.form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (state.solved || state.gaveUp) return;
+  const raw = els.input.value.trim();
+  if (!raw) return;
+  const guess = normalize(raw);
+  const correct = guess === normalize(state.today.fullName) || guess === normalize(state.today.lastName);
+
+  addHistoryItem(raw, correct);
+  els.input.value = '';
+
+  if (correct) {
+    state.solved = true;
+    endGame(true);
+    return;
+  }
+
+  state.guesses += 1;
+  state.hintsRevealed = Math.min(state.hintsRevealed + 1, HINT_DEFS.length);
+
+  if (state.guesses >= MAX_GUESSES) {
+    endGame(false);
+    return;
+  }
+
+  renderGame();
+});
+
+els.giveUpBtn.addEventListener('click', () => {
+  state.gaveUp = true;
+  endGame(false);
+});
+
+init();
+</script>
+</body>
+</html>

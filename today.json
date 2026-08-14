@@ -1,14 +1,14 @@
 {
-  "id": 111709,
-  "fullName": "Enrique Burgos",
-  "lastName": "Burgos",
-  "teams": "Kansas City Royals, San Francisco Giants",
-  "seasonsSpan": "1993-1995",
+  "id": 111721,
+  "fullName": "John Burke",
+  "lastName": "Burke",
+  "teams": "Colorado Rockies",
+  "seasonsSpan": "1996-1997",
   "position": "Pitcher",
-  "bats": "Left / Left",
-  "number": "#51",
-  "debut": "1993",
-  "birthCountry": "Panama",
-  "headshotUrl": "https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/111709/headshot/67/current",
-  "date": "2026-08-13"
+  "bats": "Switch / Right",
+  "number": "#37",
+  "debut": "1996",
+  "birthCountry": "USA",
+  "headshotUrl": "https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/111721/headshot/67/current",
+  "date": "2026-08-14"
 }

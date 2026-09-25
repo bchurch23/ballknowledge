@@ -1,14 +1,14 @@
 {
-  "id": 400079,
-  "fullName": "Luis Pineda",
-  "lastName": "Pineda",
-  "teams": "Detroit Tigers, Cincinnati Reds",
+  "id": 400081,
+  "fullName": "Mark Lukasiewicz",
+  "lastName": "Lukasiewicz",
+  "teams": "Anaheim Angels",
   "seasonsSpan": "2001-2002",
   "position": "Pitcher",
-  "bats": "Right / Right",
-  "number": "Unknown",
+  "bats": "Left / Left",
+  "number": "#47",
   "debut": "2001",
-  "birthCountry": "Dominican Republic",
-  "headshotUrl": "https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/400079/headshot/67/current",
-  "date": "2026-09-24"
+  "birthCountry": "USA",
+  "headshotUrl": "https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/400081/headshot/67/current",
+  "date": "2026-09-25"
 }

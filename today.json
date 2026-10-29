@@ -1,14 +1,14 @@
 {
-  "id": 425665,
-  "fullName": "Matt White",
-  "lastName": "White",
-  "teams": "Seattle Mariners, Washington Nationals",
-  "seasonsSpan": "2003-2005",
-  "position": "Pitcher",
-  "bats": "Right / Left",
-  "number": "Unknown",
+  "id": 425686,
+  "fullName": "Hideki Matsui",
+  "lastName": "Matsui",
+  "teams": "New York Yankees, Los Angeles Angels, Oakland Athletics, Tampa Bay Rays",
+  "seasonsSpan": "2003-2012",
+  "position": "Outfielder",
+  "bats": "Left / Right",
+  "number": "#55",
   "debut": "2003",
-  "birthCountry": "USA",
-  "headshotUrl": "https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/425665/headshot/67/current",
-  "date": "2026-10-28"
+  "birthCountry": "Japan",
+  "headshotUrl": "https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/425686/headshot/67/current",
+  "date": "2026-10-29"
 }

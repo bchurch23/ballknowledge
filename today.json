@@ -1,14 +1,14 @@
 {
-  "id": 605228,
-  "fullName": "José Fernández",
-  "lastName": "Fernández",
-  "teams": "Miami Marlins",
-  "seasonsSpan": "2013-2016",
+  "id": 605232,
+  "fullName": "Brandon Finnegan",
+  "lastName": "Finnegan",
+  "teams": "Kansas City Royals, Cincinnati Reds",
+  "seasonsSpan": "2014-2018",
   "position": "Pitcher",
-  "bats": "Right / Right",
-  "number": "#16",
-  "debut": "2013",
-  "birthCountry": "Cuba",
-  "headshotUrl": "https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/605228/headshot/67/current",
-  "date": "2026-11-11"
+  "bats": "Left / Left",
+  "number": "#29",
+  "debut": "2014",
+  "birthCountry": "USA",
+  "headshotUrl": "https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/605232/headshot/67/current",
+  "date": "2026-11-12"
 }
